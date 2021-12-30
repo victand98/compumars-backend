@@ -47,6 +47,13 @@ export const RESOURCES = {
     slug: "users",
     roles: [
       {
+        role: ROLES.SUPER_ADMIN.slug,
+        create: true,
+        delete: true,
+        update: true,
+        read: true,
+      },
+      {
         role: ROLES.ADMIN.slug,
         create: true,
         delete: true,

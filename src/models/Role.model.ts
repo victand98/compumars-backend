@@ -20,4 +20,13 @@ const RoleSchema = new mongoose.Schema<RoleDocument>(
   { timestamps: true }
 );
 
+RoleSchema.set("toJSON", {
+  virtuals: true,
+  versionKey: false,
+  transform: function (doc, ret) {
+    // remove these props when object is serialized
+    delete ret._id;
+  },
+});
+
 export const Role = mongoose.model<RoleDocument>("Role", RoleSchema);

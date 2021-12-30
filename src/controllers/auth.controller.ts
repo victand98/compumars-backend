@@ -77,10 +77,8 @@ export const login = async (
       404
     );
 
-  const { password, ...rest } = user.toObject();
-
   const jwtAccessSecret = config.get<string>("jwtAccessSecret");
-  const accessToken = jwt.sign({ user: rest }, jwtAccessSecret, {
+  const accessToken = jwt.sign({ user }, jwtAccessSecret, {
     expiresIn: config.get<string>("jwtAccessExpiration"),
   });
   const refreshToken = generateRefreshToken(user.id, req.ip);
@@ -88,7 +86,7 @@ export const login = async (
 
   return res.status(200).json({
     message: "Inicio de sesión exitoso.",
-    user: rest,
+    user,
     accessToken,
     refreshToken: refreshToken.token,
   });

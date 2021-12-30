@@ -73,7 +73,7 @@ const handleDuplicateKeyError = (err: any): CustomError => {
 };
 
 const handleTokenExpiredError = (err: TokenExpiredError): CustomError => {
-  return new CustomError(`Su sesión ha caducado y no es válida.`, 401, err);
+  return new CustomError(`Su sesión ha caducado y no es válida.`, 403, err);
 };
 
 const handleJsonWebTokenError = (err: JsonWebTokenError): CustomError => {

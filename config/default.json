@@ -5,7 +5,7 @@
   "adminUser": "",
   "adminPassword": "",
   "jwtAccessSecret": "",
-  "jwtAccessExpiration": "2min",
+  "jwtAccessExpiration": "5min",
   "jwtRefreshSecret": "",
-  "jwtRefreshExpiration": 240
+  "jwtRefreshExpiration": 1800
 }

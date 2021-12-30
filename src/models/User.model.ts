@@ -40,4 +40,19 @@ const UserSchema = new mongoose.Schema<UserDocument>(
   { timestamps: true }
 );
 
+UserSchema.set("toJSON", {
+  virtuals: true,
+  versionKey: false,
+  transform: function (doc, ret) {
+    // remove these props when object is serialized
+    delete ret._id;
+    delete ret.password;
+  },
+});
+
+UserSchema.post("save", async function (doc, next) {
+  await doc.populate("role");
+  next();
+});
+
 export const User = mongoose.model<UserDocument>("User", UserSchema);

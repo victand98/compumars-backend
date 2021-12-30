@@ -5,6 +5,7 @@ import cors from "cors";
 import log from "./config/logger";
 import routes from "./routes";
 import { errorHandler } from "./middlewares";
+import { CustomError } from "./helpers/customError";
 
 const app = express();
 
@@ -21,5 +22,14 @@ app.use(cors());
 routes(app);
 
 app.use(errorHandler);
+
+// 404 Handler
+app.use(function (req, res, next) {
+  const error404 = new CustomError(
+    "No se ha podido encontrar el recurso.",
+    404
+  );
+  res.status(error404.status).json(error404);
+});
 
 export default app;

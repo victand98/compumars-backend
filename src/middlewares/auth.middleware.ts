@@ -17,7 +17,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
     const decoded = jwt.verify(accessToken, jwtAccessSecret) as DecodedUser;
 
     req.user = {
-      id: decoded.user._id,
+      id: decoded.user.id,
       role: decoded.user.role,
     };
 
