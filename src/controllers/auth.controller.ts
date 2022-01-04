@@ -11,10 +11,11 @@ import { Role } from "../models/Role.model";
 import { User, UserDocument } from "../models/User.model";
 import { ROLES } from "../helpers/constants";
 import { generateRefreshToken, hash, hashCompare } from "../helpers/utils";
+import { Resource } from "../models/Resource.model";
 
 /**
  * Register new user
- * @route POST /user/register
+ * @route POST /auth/register
  * @param req
  * @param res
  */
@@ -54,7 +55,7 @@ export const register = async (
 
 /**
  * Login user
- * @route POST /user/login
+ * @route POST /auth/login
  * @param req
  * @param res
  */
@@ -94,7 +95,7 @@ export const login = async (
 
 /**
  * Verify and refresh access token
- * @route POST /refresh-token/
+ * @route POST /auth/refresh-token/
  * @param req
  * @param res
  */
@@ -132,4 +133,30 @@ export const refreshAccessToken = async (
     accessToken: newAccessToken,
     refreshToken: refreshToken.token,
   });
+};
+
+/**
+ * Get current user Role and permissions
+ * @route GET /auth/current/role
+ * @param req
+ * @param res
+ */
+export const currentRole = async (
+  req: CustomRequest<RefreshTokenDocument>,
+  res: Response
+) => {
+  const role = await Role.findById(req.user.role);
+  const resources = await Resource.find({
+    "roles.role": req.user.role,
+  }).select({
+    slug: 1,
+    status: 1,
+    roles: {
+      $elemMatch: {
+        role: req.user.role,
+      },
+    },
+  });
+
+  return res.status(200).json({ role, resources });
 };

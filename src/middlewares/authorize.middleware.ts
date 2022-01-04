@@ -7,8 +7,6 @@ export const authorize =
   (resource: SingleResource) =>
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log(`req.user`, req.user);
-
       const foundResource = await Resource.findOne({
         slug: resource.slug,
         "roles.role": req.user.role,
