@@ -27,7 +27,8 @@ export const register = async (
   if (user)
     throw new CustomError(
       `El usuario con el correo ingresado ya se encuentra registrado.`,
-      422
+      422,
+      { fields: ["email"] }
     );
 
   const { password, role, ...rest } = req.body;
@@ -133,6 +134,23 @@ export const refreshAccessToken = async (
     accessToken: newAccessToken,
     refreshToken: refreshToken.token,
   });
+};
+
+/**
+ * Logout user session
+ * @route POST /auth/logout
+ * @param req
+ * @param res
+ */
+export const logout = async (
+  req: CustomRequest<RefreshTokenDocument>,
+  res: Response
+) => {
+  const { token, user } = req.body;
+  await RefreshToken.findOneAndRemove({ token, user });
+  return res
+    .status(200)
+    .json({ message: "La sesión del usuario ha terminado con éxito." });
 };
 
 /**

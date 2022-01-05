@@ -17,5 +17,6 @@ authRouter.get("/current/role", auth, use(authController.currentRole));
 authRouter.post("/register", use(authController.register));
 authRouter.post("/login", use(authController.login));
 authRouter.post("/refresh-token", use(authController.refreshAccessToken));
+authRouter.post("/logout", use(authController.logout));
 
 export default authRouter;
