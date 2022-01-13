@@ -7,5 +7,9 @@
   "jwtAccessSecret": "",
   "jwtAccessExpiration": "5min",
   "jwtRefreshSecret": "",
-  "jwtRefreshExpiration": 1800
+  "jwtRefreshExpiration": 1800,
+  "emailUser": "",
+  "emailPassword": "",
+  "activationTokenExpiration": 24,
+  "frontendUri": ""
 }

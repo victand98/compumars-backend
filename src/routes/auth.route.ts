@@ -18,5 +18,10 @@ authRouter.post("/register", use(authController.register));
 authRouter.post("/login", use(authController.login));
 authRouter.post("/refresh-token", use(authController.refreshAccessToken));
 authRouter.post("/logout", use(authController.logout));
+authRouter.post("/confirm/account/:token", use(authController.confirmAccount));
+authRouter.post(
+  "/resend/confirmation",
+  use(authController.resendMailConfirmation)
+);
 
 export default authRouter;

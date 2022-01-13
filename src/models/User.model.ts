@@ -7,6 +7,7 @@ export interface UserDocument extends mongoose.Document {
   email: string;
   password: string;
   role: RoleDocument["_id"];
+  active: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +36,10 @@ const UserSchema = new mongoose.Schema<UserDocument>(
       type: mongoose.Types.ObjectId,
       ref: "Role",
       required: [true, "El campo Rol es requerido."],
+    },
+    active: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

@@ -29,6 +29,7 @@ const insertSuperAdmin = async () => {
     email: adminUser,
     password: hash(adminPassword),
     role: superAdminRole?.id,
+    active: true,
   };
   log.info("Inserting SuperAdmin...");
   await User.findOneAndUpdate({ email: userSuperAdmin.email }, userSuperAdmin, {

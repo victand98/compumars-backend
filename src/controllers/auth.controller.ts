@@ -1,17 +1,28 @@
-import config from "config";
 import { Response } from "express";
+import config from "config";
 import jwt from "jsonwebtoken";
-import { CustomError } from "../helpers/customError";
-import { CustomRequest } from "../helpers/types";
+
 import {
   RefreshToken,
   RefreshTokenDocument,
 } from "../models/RefreshToken.model";
+import {
+  ActivationToken,
+  ActivationTokenDocument,
+} from "../models/ActivationToken.model";
 import { Role } from "../models/Role.model";
 import { User, UserDocument } from "../models/User.model";
-import { ROLES } from "../helpers/constants";
-import { generateRefreshToken, hash, hashCompare } from "../helpers/utils";
 import { Resource } from "../models/Resource.model";
+import { ROLES } from "../helpers/constants";
+import { CustomError } from "../helpers/customError";
+import { CustomRequest } from "../helpers/types";
+import {
+  generateActivationToken,
+  generateRefreshToken,
+  hash,
+  hashCompare,
+  sendMailConfirmation,
+} from "../helpers/utils";
 
 /**
  * Register new user
@@ -35,16 +46,18 @@ export const register = async (
   let foundRole = role
     ? await Role.findById(role)
     : await Role.findOne({ slug: ROLES.USER.slug });
-
   const newUser = new User({
     password: hash(password),
     role: foundRole?.id,
     ...rest,
   });
   await newUser.save();
+  const activationToken = generateActivationToken(newUser.id);
+  await activationToken.save();
+  sendMailConfirmation(newUser, activationToken);
 
   return res.status(201).json({
-    message: "Su cuenta ha sido creada con éxito.",
+    message: `¡Te damos la bienvenida ${newUser.firstName}!. Se ha enviado un enlace de confirmación de su cuenta a ${newUser.email}.`,
     user: {
       id: newUser.id,
       firstname: newUser.firstName,
@@ -72,6 +85,12 @@ export const login = async (
       404
     );
 
+  if (!user.active)
+    throw new CustomError(
+      "Lo sentimos. Su cuenta actualmente no se encuentra activa. Si todavía no ha confirmado su cuenta, revise la bandeja de su correo donde se le ha enviado un enlace, caso contrario, comuníquese con atención al cliente.",
+      403
+    );
+
   const checkPassword = hashCompare(hash(req.body.password), user.password);
   if (!checkPassword)
     throw new CustomError(
@@ -92,6 +111,23 @@ export const login = async (
     accessToken,
     refreshToken: refreshToken.token,
   });
+};
+
+/**
+ * Logout user session
+ * @route POST /auth/logout
+ * @param req
+ * @param res
+ */
+export const logout = async (
+  req: CustomRequest<RefreshTokenDocument>,
+  res: Response
+) => {
+  const { token, user } = req.body;
+  await RefreshToken.findOneAndRemove({ token, user });
+  return res
+    .status(200)
+    .json({ message: "La sesión del usuario ha terminado con éxito." });
 };
 
 /**
@@ -137,20 +173,73 @@ export const refreshAccessToken = async (
 };
 
 /**
- * Logout user session
- * @route POST /auth/logout
+ * Confirm user account
+ * @route POST /auth/confirm/account/:token
  * @param req
  * @param res
  */
-export const logout = async (
-  req: CustomRequest<RefreshTokenDocument>,
+export const confirmAccount = async (
+  req: CustomRequest<ActivationTokenDocument>,
   res: Response
 ) => {
-  const { token, user } = req.body;
-  await RefreshToken.findOneAndRemove({ token, user });
-  return res
-    .status(200)
-    .json({ message: "La sesión del usuario ha terminado con éxito." });
+  const { token } = req.params;
+  const activationToken = await ActivationToken.findOne({ token });
+  if (!activationToken)
+    throw new CustomError(
+      "El enlace proporcionado para activar su cuenta no es válido.",
+      404
+    );
+  const user = await User.findById(activationToken.user);
+  if (activationToken.isExpired) {
+    await activationToken.remove();
+    await user?.remove();
+    throw new CustomError(
+      "Lo sentimos. Ha expirado el tiempo proporcionado para la confirmación de la cuenta.",
+      400
+    );
+  }
+
+  if (user) {
+    user.active = true;
+    await user.save();
+  }
+
+  // Delete the token from the database, it is no longer needed
+  await activationToken.remove();
+
+  return res.status(200).json({
+    message:
+      "¡Muchas gracias por confirmar la creación de tu cuenta! Ahora ya puedes iniciar sesión.",
+  });
+};
+
+/**
+ * Resend email for account confirmation
+ * @route POST /auth/resend/confirmation
+ * @param req
+ * @param res
+ */
+export const resendMailConfirmation = async (
+  req: CustomRequest<ActivationTokenDocument>,
+  res: Response
+) => {
+  const { user } = req.body;
+  const activationToken = await ActivationToken.findOne({ user }).populate(
+    "user"
+  );
+  if (!activationToken)
+    throw new CustomError(
+      "No se ha podido re-enviar el correo de confirmación. Por favor, comuníquese con atención al cliente.",
+      404
+    );
+
+  await activationToken.remove();
+  const newActivationToken = generateActivationToken(user);
+  await newActivationToken.save();
+  sendMailConfirmation(activationToken.user, newActivationToken);
+  return res.status(201).json({
+    message: `Se ha re-enviado un enlace de confirmación de su cuenta a ${activationToken.user.email}.`,
+  });
 };
 
 /**

@@ -5,5 +5,8 @@
   "adminUser": "ADMIN_USER",
   "adminPassword": "ADMIN_PASSWORD",
   "jwtAccessSecret": "JWT_ACCESS_SECRET",
-  "jwtRefreshSecret": "JWT_REFRESH_SECRET"
+  "jwtRefreshSecret": "JWT_REFRESH_SECRET",
+  "emailUser": "EMAIL_USER",
+  "emailPassword": "EMAIL_PASSWORD",
+  "frontendUri": "FRONTEND_URI"
 }
